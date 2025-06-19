@@ -107,9 +107,3 @@ func (b *BedrockService) GenerateText(prompt string) (string, error) {
 
 	return summaryResp.Content[0].Text, nil
 }
-
-// Legacy function for backward compatibility
-func GenerateText(prompt string) (string, error) {
-	service := NewBedrockService()
-	return service.GenerateText(prompt)
-}

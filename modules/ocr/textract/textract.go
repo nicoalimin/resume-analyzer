@@ -76,9 +76,3 @@ func (t *TextractService) ExtractTextFromPDF(pdfPath string) (string, error) {
 	}
 	return combinedText, nil
 }
-
-// Legacy function for backward compatibility
-func ExtractTextFromPDF(pdfPath string) (string, error) {
-	service := NewTextractService()
-	return service.ExtractTextFromPDF(pdfPath)
-}
