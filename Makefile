@@ -81,18 +81,44 @@ summarize: build
 	@echo "Running summarize example..."
 	./$(BUILD_DIR)/$(BINARY_NAME) summarize -i output_txts -o output_summaries
 
+# Run the consolidate command
+consolidate: build
+	@echo "Running consolidate example..."
+	./$(BUILD_DIR)/$(BINARY_NAME) consolidate -i output_summaries -o output_consolidated/consolidated_table_$(shell date +%Y%m%d_%H%M%S).md
+
+# Master workflow: convert PDFs, summarize, and consolidate
+all-steps: build
+	@echo "=== Starting complete resume analysis workflow ==="
+	@echo "Step 1: Converting PDFs to text..."
+	@$(MAKE) convert-pdfs
+	@echo "Step 2: Generating summaries..."
+	@$(MAKE) summarize
+	@echo "Step 3: Creating consolidated table..."
+	@$(MAKE) consolidate
+	@echo "=== Workflow complete! ==="
+
+# Clean output directories
+clean-outputs:
+	@echo "Cleaning output directories..."
+	@rm -rf output_txts/*
+	@rm -rf output_summaries/*
+	@echo "Output directories cleaned."
+
 # Show help
 help:
 	@echo "Available targets:"
 	@echo "  build         - Build the application"
 	@echo "  build-all     - Build for multiple platforms (Linux, macOS, Windows)"
 	@echo "  clean         - Clean build artifacts"
+	@echo "  clean-outputs - Clean all output directories (output_consolidated, output_txts, output_summaries)"
 	@echo "  test          - Run tests"
 	@echo "  test-coverage - Run tests with coverage"
 	@echo "  deps          - Install dependencies"
 	@echo "  run           - Run the application"
 	@echo "  convert-pdfs  - Run convert-pdfs example (input_pdfs -> output_txts)"
 	@echo "  summarize     - Run summarize example (output_txts -> output_summaries)"
+	@echo "  consolidate   - Run consolidate example (output_summaries -> consolidated_table_YYYYMMDD_HHMMSS.md)"
+	@echo "  all-steps     - Run complete workflow: convert-pdfs -> summarize -> consolidate"
 	@echo "  fmt           - Format code"
 	@echo "  lint          - Lint code"
 	@echo "  install-lint  - Install golangci-lint"

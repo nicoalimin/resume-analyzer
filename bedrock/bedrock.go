@@ -38,8 +38,8 @@ type Content struct {
 	Text string `json:"text"`
 }
 
-// GenerateSummary calls AWS Bedrock to generate a summary of the given text
-func GenerateSummary(text string) (string, error) {
+// GenerateText calls AWS Bedrock with any prompt and returns the response
+func GenerateText(prompt string) (string, error) {
 	// Load AWS config
 	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion("ap-southeast-1"))
 	if err != nil {
@@ -47,13 +47,6 @@ func GenerateSummary(text string) (string, error) {
 	}
 
 	client := bedrockruntime.NewFromConfig(cfg)
-
-	// Create the prompt for summarization
-	prompt := fmt.Sprintf(`Please provide a concise summary of the following document. Focus on key points, skills, experience, and qualifications:
-
-%s
-
-Summary:`, text)
 
 	// Create the request
 	request := SummaryRequest{
@@ -67,7 +60,6 @@ Summary:`, text)
 		Temperature:      0.3,
 		AnthropicVersion: viper.GetString("anthropic_version"),
 	}
-
 	if request.AnthropicVersion == "" {
 		request.AnthropicVersion = "bedrock-2023-05-31"
 	}
@@ -78,17 +70,14 @@ Summary:`, text)
 		return "", fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	// Uses viper config key: bedrock_model_id
-	modelID := viper.GetString("bedrock_model_id")
-	if modelID == "" {
-		modelID = "anthropic.claude-3-5-sonnet-20240620-v1:0"
-	}
-
 	// Call Bedrock (using Claude 3 Sonnet)
 	input := &bedrockruntime.InvokeModelInput{
-		ModelId:     aws.String(modelID),
+		ModelId:     aws.String(viper.GetString("bedrock_model_id")),
 		ContentType: aws.String("application/json"),
 		Body:        requestBytes,
+	}
+	if *input.ModelId == "" {
+		*input.ModelId = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 	}
 
 	resp, err := client.InvokeModel(ctx, input)

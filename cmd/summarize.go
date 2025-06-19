@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/nicoalimin/resume-analyzer/bedrock"
+	"github.com/nicoalimin/resume-analyzer/prompts"
 	"github.com/spf13/cobra"
 )
 
@@ -52,7 +53,8 @@ and saves the summaries to an output folder.`,
 			}
 
 			// Generate summary using Bedrock
-			summary, err := bedrock.GenerateSummary(string(content))
+			prompt := prompts.GetSummaryPrompt(string(content))
+			summary, err := bedrock.GenerateText(prompt)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Bedrock failed for %s: %v\n", file.Name(), err)
 				continue
