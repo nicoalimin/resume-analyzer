@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -8,25 +7,53 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/nicoalimin/resume-analyzer/textract"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var cfgFile string
+var inputDir string
+var outputDir string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "resume-analyzer",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "A CLI tool to OCR PDFs using AWS Textract",
+	Long:  `Processes all PDFs in a folder using AWS Textract and saves the extracted text to another folder.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if inputDir == "" || outputDir == "" {
+			fmt.Fprintln(os.Stderr, "Both --input and --output folders must be specified.")
+			os.Exit(1)
+		}
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+		files, err := os.ReadDir(inputDir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to read input directory: %v\n", err)
+			os.Exit(1)
+		}
+
+		for _, file := range files {
+			if file.IsDir() || len(file.Name()) < 4 || file.Name()[len(file.Name())-4:] != ".pdf" {
+				continue
+			}
+			pdfPath := inputDir + string(os.PathSeparator) + file.Name()
+			outputPath := outputDir + string(os.PathSeparator) + file.Name()[:len(file.Name())-4] + ".txt"
+
+			fmt.Printf("Processing %s...\n", file.Name())
+			extractedText, err := textract.ExtractTextFromPDF(pdfPath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Textract failed for %s: %v\n", file.Name(), err)
+				continue
+			}
+
+			err = os.WriteFile(outputPath, []byte(extractedText), 0644)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to write output for %s: %v\n", file.Name(), err)
+			}
+		}
+		fmt.Println("Processing complete.")
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -50,6 +77,8 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().StringVarP(&inputDir, "input", "i", "", "Input folder containing PDFs")
+	rootCmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output folder for extracted text")
 }
 
 // initConfig reads in config file and ENV variables if set.
