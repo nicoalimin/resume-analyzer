@@ -4,17 +4,25 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/nicoalimin/resume-analyzer/interfaces"
 	"github.com/nicoalimin/resume-analyzer/textract"
 	"github.com/spf13/cobra"
 )
 
 var convertInputDir string
 var convertOutputDir string
+var ocrService interfaces.OCRService
 
 var convertPDFsCmd = &cobra.Command{
 	Use:   "convert-pdfs",
 	Short: "Convert PDFs in a folder to text using AWS Textract",
 	Long:  `Processes all PDFs in a folder using AWS Textract and saves the extracted text to another folder.`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		// Initialize OCR service if not already set
+		if ocrService == nil {
+			ocrService = textract.NewTextractService()
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if convertInputDir == "" || convertOutputDir == "" {
 			fmt.Fprintln(os.Stderr, "Both --input and --output folders must be specified.")
@@ -35,7 +43,7 @@ var convertPDFsCmd = &cobra.Command{
 			outputPath := convertOutputDir + string(os.PathSeparator) + file.Name()[:len(file.Name())-4] + ".txt"
 
 			fmt.Printf("Processing %s...\n", file.Name())
-			extractedText, err := textract.ExtractTextFromPDF(pdfPath)
+			extractedText, err := ocrService.ExtractTextFromPDF(pdfPath)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Textract failed for %s: %v\n", file.Name(), err)
 				continue
@@ -48,6 +56,11 @@ var convertPDFsCmd = &cobra.Command{
 		}
 		fmt.Println("Processing complete.")
 	},
+}
+
+// SetOCRService allows dependency injection of OCR service (useful for testing)
+func SetOCRService(service interfaces.OCRService) {
+	ocrService = service
 }
 
 func init() {

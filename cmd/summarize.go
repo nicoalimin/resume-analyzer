@@ -10,12 +10,14 @@ import (
 	"strings"
 
 	"github.com/nicoalimin/resume-analyzer/bedrock"
+	"github.com/nicoalimin/resume-analyzer/interfaces"
 	"github.com/nicoalimin/resume-analyzer/prompts"
 	"github.com/spf13/cobra"
 )
 
 var summarizeInputDir string
 var summarizeOutputDir string
+var llmService interfaces.LLMService
 
 // summarizeCmd represents the summarize command
 var summarizeCmd = &cobra.Command{
@@ -23,6 +25,12 @@ var summarizeCmd = &cobra.Command{
 	Short: "Generate summaries of extracted text documents using AWS Bedrock",
 	Long: `Reads all .txt files from a folder, generates summaries using AWS Bedrock,
 and saves the summaries to an output folder.`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		// Initialize LLM service if not already set
+		if llmService == nil {
+			llmService = bedrock.NewBedrockService()
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if summarizeInputDir == "" || summarizeOutputDir == "" {
 			fmt.Fprintln(os.Stderr, "Both --input and --output folders must be specified.")
@@ -52,9 +60,9 @@ and saves the summaries to an output folder.`,
 				continue
 			}
 
-			// Generate summary using Bedrock
+			// Generate summary using LLM service
 			prompt := prompts.GetSummaryPrompt(string(content))
-			summary, err := bedrock.GenerateText(prompt)
+			summary, err := llmService.GenerateText(prompt)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Bedrock failed for %s: %v\n", file.Name(), err)
 				continue
@@ -70,6 +78,11 @@ and saves the summaries to an output folder.`,
 		}
 		fmt.Println("Summarization complete.")
 	},
+}
+
+// SetLLMService allows dependency injection of LLM service (useful for testing)
+func SetLLMService(service interfaces.LLMService) {
+	llmService = service
 }
 
 func init() {

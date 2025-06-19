@@ -10,12 +10,14 @@ import (
 	"strings"
 
 	"github.com/nicoalimin/resume-analyzer/bedrock"
+	"github.com/nicoalimin/resume-analyzer/interfaces"
 	"github.com/nicoalimin/resume-analyzer/prompts"
 	"github.com/spf13/cobra"
 )
 
 var consolidateInputDir string
 var consolidateOutputFile string
+var consolidateLLMService interfaces.LLMService
 
 type ApplicantInfo struct {
 	Name            string
@@ -35,6 +37,12 @@ var consolidateCmd = &cobra.Command{
 	Use:   "consolidate",
 	Short: "Consolidate all summaries into a single summary table",
 	Long:  `Reads all summary files and generates a consolidated table with applicant information.`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		// Initialize LLM service if not already set
+		if consolidateLLMService == nil {
+			consolidateLLMService = bedrock.NewBedrockService()
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if consolidateInputDir == "" || consolidateOutputFile == "" {
 			fmt.Fprintln(os.Stderr, "Both --input and --output must be specified.")
@@ -64,7 +72,7 @@ var consolidateCmd = &cobra.Command{
 				continue
 			}
 
-			// Extract structured information using Bedrock
+			// Extract structured information using LLM service
 			applicant, err := extractApplicantInfo(string(content), file.Name())
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Failed to extract info from %s: %v\n", file.Name(), err)
@@ -88,10 +96,15 @@ var consolidateCmd = &cobra.Command{
 	},
 }
 
+// SetConsolidateLLMService allows dependency injection of LLM service (useful for testing)
+func SetConsolidateLLMService(service interfaces.LLMService) {
+	consolidateLLMService = service
+}
+
 func extractApplicantInfo(summary string, filename string) (ApplicantInfo, error) {
 	prompt := prompts.GetExtractionPrompt(summary)
 
-	response, err := bedrock.GenerateText(prompt)
+	response, err := consolidateLLMService.GenerateText(prompt)
 	if err != nil {
 		return ApplicantInfo{}, err
 	}
