@@ -158,29 +158,40 @@ func extractField(response, field string) string {
 }
 
 func generateConsolidatedTable(applicants []ApplicantInfo) string {
-	var table strings.Builder
+	var csv strings.Builder
 
-	// Markdown table header
-	table.WriteString("| Applicant | Role | Seniority | Status | Current Position | Current Company | Years of Exp | CV Link | Skillset | Remarks |\n")
-	table.WriteString("|-----------|------|-----------|--------|------------------|-----------------|--------------|---------|----------|---------|\n")
+	// CSV header
+	csv.WriteString("Applicant,Role,Seniority,Status,Current Position,Current Company,Years of Exp,CV Link,Skillset,Remarks\n")
 
 	// Data rows
 	for _, applicant := range applicants {
-		row := fmt.Sprintf("| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n",
-			applicant.Name,
-			applicant.Role,
-			applicant.Seniority,
-			applicant.Status,
-			applicant.CurrentPosition,
-			applicant.CurrentCompany,
-			applicant.YearsOfExp,
-			applicant.CVLink,
-			applicant.Skillset,
-			applicant.Remarks)
-		table.WriteString(row)
+		// Escape CSV fields that contain commas or quotes
+		row := fmt.Sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+			escapeCSVField(applicant.Name),
+			escapeCSVField(applicant.Role),
+			escapeCSVField(applicant.Seniority),
+			escapeCSVField(applicant.Status),
+			escapeCSVField(applicant.CurrentPosition),
+			escapeCSVField(applicant.CurrentCompany),
+			escapeCSVField(applicant.YearsOfExp),
+			escapeCSVField(applicant.CVLink),
+			escapeCSVField(applicant.Skillset),
+			escapeCSVField(applicant.Remarks))
+		csv.WriteString(row)
 	}
 
-	return table.String()
+	return csv.String()
+}
+
+// escapeCSVField properly escapes CSV fields that contain commas, quotes, or newlines
+func escapeCSVField(field string) string {
+	// If field contains comma, quote, or newline, wrap in quotes and escape internal quotes
+	if strings.ContainsAny(field, ",\"\n\r") {
+		// Replace any existing quotes with double quotes
+		escaped := strings.ReplaceAll(field, "\"", "\"\"")
+		return "\"" + escaped + "\""
+	}
+	return field
 }
 
 func init() {

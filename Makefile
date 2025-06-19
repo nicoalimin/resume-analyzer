@@ -84,7 +84,7 @@ summarize: build
 # Run the consolidate command
 consolidate: build
 	@echo "Running consolidate example..."
-	./$(BUILD_DIR)/$(BINARY_NAME) consolidate -i output_summaries -o output_consolidated/consolidated_table_$(shell date +%Y%m%d_%H%M%S).md
+	./$(BUILD_DIR)/$(BINARY_NAME) consolidate -i output_summaries -o output_consolidated/consolidated_table_$(shell date +%Y%m%d_%H%M%S).csv
 
 # Master workflow: convert PDFs, summarize, and consolidate
 all-steps: build
@@ -117,7 +117,7 @@ help:
 	@echo "  run           - Run the application"
 	@echo "  convert-pdfs  - Run convert-pdfs example (input_pdfs -> output_txts)"
 	@echo "  summarize     - Run summarize example (output_txts -> output_summaries)"
-	@echo "  consolidate   - Run consolidate example (output_summaries -> consolidated_table_YYYYMMDD_HHMMSS.md)"
+	@echo "  consolidate   - Run consolidate example (output_summaries -> consolidated_table_YYYYMMDD_HHMMSS.csv)"
 	@echo "  all-steps     - Run complete workflow: convert-pdfs -> summarize -> consolidate"
 	@echo "  fmt           - Format code"
 	@echo "  lint          - Lint code"

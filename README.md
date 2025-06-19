@@ -6,7 +6,7 @@ A powerful CLI tool that processes PDF resumes using AWS Textract for OCR and AW
 
 - **PDF Processing**: Converts multi-page PDFs to text using AWS Textract
 - **Intelligent Summarization**: Uses AWS Bedrock (Claude) to extract key information
-- **Consolidated Analysis**: Creates markdown tables with applicant comparisons
+- **Consolidated Analysis**: Creates CSV files with applicant comparisons
 - **Technical Skills Assessment**: Specifically identifies key technical skills
 - **Seniority Evaluation**: Assesses experience levels based on multiple factors
 
@@ -56,7 +56,7 @@ make all-steps
 This will:
 1. Convert PDFs to text (`input_pdfs` → `output_txts`)
 2. Generate summaries (`output_txts` → `output_summaries`)
-3. Create consolidated table (`output_summaries` → `consolidated_table_YYYYMMDD_HHMMSS.md`)
+3. Create consolidated CSV (`output_summaries` → `consolidated_table_YYYYMMDD_HHMMSS.csv`)
 
 ### Individual Commands
 
@@ -74,11 +74,11 @@ make summarize
 ./bin/resume-analyzer summarize -i output_txts -o output_summaries
 ```
 
-#### 3. Create Consolidated Table
+#### 3. Create Consolidated CSV
 ```bash
 make consolidate
 # or
-./bin/resume-analyzer consolidate -i output_summaries -o consolidated_table.md
+./bin/resume-analyzer consolidate -i output_summaries -o consolidated_table.csv
 ```
 
 ### Directory Structure
@@ -88,7 +88,7 @@ resume-analyzer/
 ├── input_pdfs/           # Place your PDF resumes here
 ├── output_txts/          # Extracted text files
 ├── output_summaries/     # AI-generated summaries
-├── consolidated_table_*.md  # Final markdown table
+├── consolidated_table_*.csv  # Final CSV file
 └── bin/                  # Built executable
 ```
 
@@ -112,9 +112,15 @@ Each resume gets a detailed summary with:
 - Technical skills breakdown
 - Status and achievements
 
-### Consolidated Table
-A markdown table with columns:
-| Applicant | Role | Seniority | Status | Current Position | Current Company | Years of Exp | CV Link | Skillset | Remarks |
+### Consolidated CSV
+A CSV file with columns:
+Applicant,Role,Seniority,Status,Current Position,Current Company,Years of Exp,CV Link,Skillset,Remarks
+
+The CSV format makes it easy to:
+- Import into spreadsheet applications (Excel, Google Sheets)
+- Process with data analysis tools
+- Filter and sort applicant data
+- Generate reports and visualizations
 
 ## Makefile Commands
 
@@ -124,7 +130,7 @@ make clean          # Clean build artifacts
 make clean-outputs  # Clean all output directories
 make convert-pdfs   # Convert PDFs to text
 make summarize      # Generate summaries
-make consolidate    # Create consolidated table
+make consolidate    # Create consolidated CSV
 make all-steps      # Run complete workflow
 make help           # Show all available commands
 ```
