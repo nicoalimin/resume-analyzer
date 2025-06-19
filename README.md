@@ -81,6 +81,15 @@ make consolidate
 ./bin/resume-analyzer consolidate -i output_summaries -o consolidated_table.csv
 ```
 
+#### 4. Query All Resumes
+```bash
+# Query with output to console (default)
+./bin/resume-analyzer query -p "Who has the most experience with Python?" -i output_txts
+
+# Query with output to file (optional)
+./bin/resume-analyzer query -p "Compare the technical skills of all candidates" -i output_txts -o query_response.txt
+```
+
 ### Directory Structure
 
 ```
@@ -89,6 +98,7 @@ resume-analyzer/
 ├── output_txts/          # Extracted text files
 ├── output_summaries/     # AI-generated summaries
 ├── consolidated_table_*.csv  # Final CSV file
+├── query_response.txt    # Query responses (optional)
 └── bin/                  # Built executable
 ```
 
@@ -122,6 +132,17 @@ The CSV format makes it easy to:
 - Filter and sort applicant data
 - Generate reports and visualizations
 
+### Query Responses
+The query command allows you to ask custom questions about all resumes at once. Examples:
+
+- **Skill Comparison**: "Who has the most experience with React and TypeScript?"
+- **Experience Analysis**: "Which candidates have more than 5 years of experience?"
+- **Role Matching**: "Find candidates suitable for a Senior Backend Developer role"
+- **Company Analysis**: "Which candidates have worked at FAANG companies?"
+- **Technical Assessment**: "Compare the cloud computing skills of all candidates"
+
+The query combines all resume texts into a single prompt, allowing Bedrock to provide comprehensive analysis across all candidates.
+
 ## Makefile Commands
 
 ```bash
@@ -131,6 +152,7 @@ make clean-outputs  # Clean all output directories
 make convert-pdfs   # Convert PDFs to text
 make summarize      # Generate summaries
 make consolidate    # Create consolidated CSV
+make query          # Show query command examples
 make all-steps      # Run complete workflow
 make help           # Show all available commands
 ```
