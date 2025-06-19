@@ -9,13 +9,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/textract"
 	"github.com/aws/aws-sdk-go-v2/service/textract/types"
+	"github.com/nicoalimin/resume-analyzer/interfaces"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 )
 
 var ctx = context.Background()
 
-// ExtractTextFromPDF calls AWS Textract DetectDocumentText on the given PDF file and returns the extracted text.
-func ExtractTextFromPDF(pdfPath string) (string, error) {
+// TextractService implements the OCRService interface using AWS Textract
+type TextractService struct{}
+
+// NewTextractService creates a new instance of TextractService
+func NewTextractService() interfaces.OCRService {
+	return &TextractService{}
+}
+
+// ExtractTextFromPDF implements the OCRService interface
+func (t *TextractService) ExtractTextFromPDF(pdfPath string) (string, error) {
 	// Split PDF into single-page PDFs in a temp dir
 	tempDir, err := os.MkdirTemp("", "pdfpages")
 	if err != nil {
@@ -66,4 +75,10 @@ func ExtractTextFromPDF(pdfPath string) (string, error) {
 		}
 	}
 	return combinedText, nil
+}
+
+// Legacy function for backward compatibility
+func ExtractTextFromPDF(pdfPath string) (string, error) {
+	service := NewTextractService()
+	return service.ExtractTextFromPDF(pdfPath)
 }

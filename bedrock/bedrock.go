@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
+	"github.com/nicoalimin/resume-analyzer/interfaces"
 	"github.com/spf13/viper"
 )
 
@@ -38,8 +39,16 @@ type Content struct {
 	Text string `json:"text"`
 }
 
-// GenerateText calls AWS Bedrock with any prompt and returns the response
-func GenerateText(prompt string) (string, error) {
+// BedrockService implements the LLMService interface using AWS Bedrock
+type BedrockService struct{}
+
+// NewBedrockService creates a new instance of BedrockService
+func NewBedrockService() interfaces.LLMService {
+	return &BedrockService{}
+}
+
+// GenerateText implements the LLMService interface
+func (b *BedrockService) GenerateText(prompt string) (string, error) {
 	// Load AWS config
 	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion("ap-southeast-1"))
 	if err != nil {
@@ -97,4 +106,10 @@ func GenerateText(prompt string) (string, error) {
 	}
 
 	return summaryResp.Content[0].Text, nil
+}
+
+// Legacy function for backward compatibility
+func GenerateText(prompt string) (string, error) {
+	service := NewBedrockService()
+	return service.GenerateText(prompt)
 }
