@@ -71,6 +71,16 @@ install-lint:
 	@echo "Installing golangci-lint..."
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
+# Run the convert-pdfs command
+convert-pdfs: build
+	@echo "Running convert-pdfs example..."
+	./$(BUILD_DIR)/$(BINARY_NAME) convert-pdfs -i input_pdfs -o output_txts
+
+# Run the summarize command
+summarize: build
+	@echo "Running summarize example..."
+	./$(BUILD_DIR)/$(BINARY_NAME) summarize -i output_txts -o output_summaries
+
 # Show help
 help:
 	@echo "Available targets:"
@@ -81,6 +91,8 @@ help:
 	@echo "  test-coverage - Run tests with coverage"
 	@echo "  deps          - Install dependencies"
 	@echo "  run           - Run the application"
+	@echo "  convert-pdfs  - Run convert-pdfs example (input_pdfs -> output_txts)"
+	@echo "  summarize     - Run summarize example (output_txts -> output_summaries)"
 	@echo "  fmt           - Format code"
 	@echo "  lint          - Lint code"
 	@echo "  install-lint  - Install golangci-lint"

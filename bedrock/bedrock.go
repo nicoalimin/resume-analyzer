@@ -15,9 +15,10 @@ var ctx = context.Background()
 
 // SummaryRequest represents the request structure for Claude
 type SummaryRequest struct {
-	Messages    []Message `json:"messages"`
-	MaxTokens   int       `json:"max_tokens"`
-	Temperature float64   `json:"temperature"`
+	Messages         []Message `json:"messages"`
+	MaxTokens        int       `json:"max_tokens"`
+	Temperature      float64   `json:"temperature"`
+	AnthropicVersion string    `json:"anthropic_version"`
 }
 
 // Message represents a message in the conversation
@@ -62,8 +63,13 @@ Summary:`, text)
 				Content: prompt,
 			},
 		},
-		MaxTokens:   1000,
-		Temperature: 0.3,
+		MaxTokens:        1000,
+		Temperature:      0.3,
+		AnthropicVersion: viper.GetString("anthropic_version"),
+	}
+
+	if request.AnthropicVersion == "" {
+		request.AnthropicVersion = "bedrock-2023-05-31"
 	}
 
 	// Marshal the request to JSON

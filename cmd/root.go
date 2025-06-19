@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/nicoalimin/resume-analyzer/textract"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -22,37 +21,7 @@ var rootCmd = &cobra.Command{
 	Short: "A CLI tool to OCR PDFs using AWS Textract",
 	Long:  `Processes all PDFs in a folder using AWS Textract and saves the extracted text to another folder.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if inputDir == "" || outputDir == "" {
-			fmt.Fprintln(os.Stderr, "Both --input and --output folders must be specified.")
-			os.Exit(1)
-		}
-
-		files, err := os.ReadDir(inputDir)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to read input directory: %v\n", err)
-			os.Exit(1)
-		}
-
-		for _, file := range files {
-			if file.IsDir() || len(file.Name()) < 4 || file.Name()[len(file.Name())-4:] != ".pdf" {
-				continue
-			}
-			pdfPath := inputDir + string(os.PathSeparator) + file.Name()
-			outputPath := outputDir + string(os.PathSeparator) + file.Name()[:len(file.Name())-4] + ".txt"
-
-			fmt.Printf("Processing %s...\n", file.Name())
-			extractedText, err := textract.ExtractTextFromPDF(pdfPath)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Textract failed for %s: %v\n", file.Name(), err)
-				continue
-			}
-
-			err = os.WriteFile(outputPath, []byte(extractedText), 0644)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Failed to write output for %s: %v\n", file.Name(), err)
-			}
-		}
-		fmt.Println("Processing complete.")
+		cmd.Help()
 	},
 }
 
