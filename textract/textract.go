@@ -34,7 +34,7 @@ func ExtractTextFromPDF(pdfPath string) (string, error) {
 	}
 
 	// Load AWS config
-	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion("us-east-1"))
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion("ap-southeast-1"))
 	if err != nil {
 		return "", fmt.Errorf("failed to load AWS config: %w", err)
 	}
