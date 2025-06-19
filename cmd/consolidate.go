@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/nicoalimin/resume-analyzer/bedrock"
 	"github.com/nicoalimin/resume-analyzer/interfaces"
+	"github.com/nicoalimin/resume-analyzer/modules/llm/bedrock"
 	"github.com/nicoalimin/resume-analyzer/prompts"
 	"github.com/spf13/cobra"
 )

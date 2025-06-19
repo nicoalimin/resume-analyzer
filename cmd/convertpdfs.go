@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/nicoalimin/resume-analyzer/interfaces"
-	"github.com/nicoalimin/resume-analyzer/textract"
+	"github.com/nicoalimin/resume-analyzer/modules/ocr/textract"
 	"github.com/spf13/cobra"
 )
 
