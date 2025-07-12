@@ -6,6 +6,15 @@ BINARY_NAME=resume-analyzer
 # Build directory
 BUILD_DIR=bin
 
+# Subfolder support - can be set via: make subfolder=myfolder convert-pdfs
+SUBFOLDER ?=
+
+# Define paths with subfolder support
+INPUT_PDFS_DIR = input_pdfs$(if $(SUBFOLDER),/$(SUBFOLDER))
+OUTPUT_TXTS_DIR = output_txts$(if $(SUBFOLDER),/$(SUBFOLDER))
+OUTPUT_SUMMARIES_DIR = output_summaries$(if $(SUBFOLDER),/$(SUBFOLDER))
+OUTPUT_CONSOLIDATED_DIR = output_consolidated$(if $(SUBFOLDER),/$(SUBFOLDER))
+
 # Go build flags
 LDFLAGS=-ldflags "-s -w"
 
@@ -74,41 +83,56 @@ install-lint:
 # Run the convert-pdfs command
 convert-pdfs: build
 	@echo "Running convert-pdfs example..."
-	./$(BUILD_DIR)/$(BINARY_NAME) convert-pdfs -i input_pdfs -o output_txts
+	@echo "Input: $(INPUT_PDFS_DIR), Output: $(OUTPUT_TXTS_DIR)"
+	@mkdir -p $(OUTPUT_TXTS_DIR)
+	./$(BUILD_DIR)/$(BINARY_NAME) convert-pdfs -i $(INPUT_PDFS_DIR) -o $(OUTPUT_TXTS_DIR)
 
 # Run the summarize command
 summarize: build
 	@echo "Running summarize example..."
-	./$(BUILD_DIR)/$(BINARY_NAME) summarize -i output_txts -o output_summaries
+	@echo "Input: $(OUTPUT_TXTS_DIR), Output: $(OUTPUT_SUMMARIES_DIR)"
+	@mkdir -p $(OUTPUT_SUMMARIES_DIR)
+	./$(BUILD_DIR)/$(BINARY_NAME) summarize -i $(OUTPUT_TXTS_DIR) -o $(OUTPUT_SUMMARIES_DIR)
 
 # Run the consolidate command
 consolidate: build
 	@echo "Running consolidate example..."
-	./$(BUILD_DIR)/$(BINARY_NAME) consolidate -i output_summaries -o output_consolidated/consolidated_table_$(shell date +%Y%m%d_%H%M%S).csv
+	@echo "Input: $(OUTPUT_SUMMARIES_DIR), Output: $(OUTPUT_CONSOLIDATED_DIR)"
+	@mkdir -p $(OUTPUT_CONSOLIDATED_DIR)
+	./$(BUILD_DIR)/$(BINARY_NAME) consolidate -i $(OUTPUT_SUMMARIES_DIR) -o $(OUTPUT_CONSOLIDATED_DIR)/consolidated_table_$(shell date +%Y%m%d_%H%M%S).csv
 
 # Run the query command (example)
 query: build
 	@echo "Running query example..."
-	@echo "Example: ./$(BUILD_DIR)/$(BINARY_NAME) query -p 'Who has the most experience with Python?' -i output_txts"
-	@echo "Example: ./$(BUILD_DIR)/$(BINARY_NAME) query -p 'Compare the technical skills of all candidates' -i output_txts"
+	@echo "Example: ./$(BUILD_DIR)/$(BINARY_NAME) query -p 'Who has the most experience with Python?' -i $(OUTPUT_TXTS_DIR)"
+	@echo "Example: ./$(BUILD_DIR)/$(BINARY_NAME) query -p 'Compare the technical skills of all candidates' -i $(OUTPUT_TXTS_DIR)"
 	@echo "Note: Responses are printed to console by default. Use -o filename to save to file."
 
 # Master workflow: convert PDFs, summarize, and consolidate
 all-steps: build
 	@echo "=== Starting complete resume analysis workflow ==="
+	@if [ -n "$(SUBFOLDER)" ]; then echo "Using subfolder: $(SUBFOLDER)"; fi
 	@echo "Step 1: Converting PDFs to text..."
-	@$(MAKE) convert-pdfs
+	@$(MAKE) convert-pdfs SUBFOLDER=$(SUBFOLDER)
 	@echo "Step 2: Generating summaries..."
-	@$(MAKE) summarize
+	@$(MAKE) summarize SUBFOLDER=$(SUBFOLDER)
 	@echo "Step 3: Creating consolidated table..."
-	@$(MAKE) consolidate
+	@$(MAKE) consolidate SUBFOLDER=$(SUBFOLDER)
 	@echo "=== Workflow complete! ==="
 
 # Clean output directories
 clean-outputs:
 	@echo "Cleaning output directories..."
-	@rm -rf output_txts/*
-	@rm -rf output_summaries/*
+	@if [ -n "$(SUBFOLDER)" ]; then \
+		echo "Cleaning subfolder: $(SUBFOLDER)"; \
+		rm -rf $(OUTPUT_TXTS_DIR)/*; \
+		rm -rf $(OUTPUT_SUMMARIES_DIR)/*; \
+		rm -rf $(OUTPUT_CONSOLIDATED_DIR)/*; \
+	else \
+		rm -rf output_txts/*; \
+		rm -rf output_summaries/*; \
+		rm -rf output_consolidated/*; \
+	fi
 	@echo "Output directories cleaned."
 
 # Show help
@@ -130,4 +154,9 @@ help:
 	@echo "  fmt           - Format code"
 	@echo "  lint          - Lint code"
 	@echo "  install-lint  - Install golangci-lint"
-	@echo "  help          - Show this help" 
+	@echo "  help          - Show this help"
+	@echo ""
+	@echo "Subfolder usage:"
+	@echo "  make SUBFOLDER=myfolder convert-pdfs    - Use input_pdfs/myfolder and output_txts/myfolder"
+	@echo "  make SUBFOLDER=myfolder all-steps       - Run complete workflow with subfolder"
+	@echo "  make SUBFOLDER=myfolder clean-outputs   - Clean only subfolder outputs" 
