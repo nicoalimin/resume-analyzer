@@ -12,11 +12,14 @@ A powerful CLI tool that processes PDF resumes using AWS Textract for OCR and AW
 
 ## Prerequisites
 
-- Go 1.16 or higher
+- Go 1.16 or higher (for local development)
+- Docker (for containerized usage)
 - AWS CLI configured with appropriate credentials
 - AWS Textract and Bedrock access
 
 ## Installation
+
+### Option 1: Local Installation
 
 1. **Clone the repository:**
    ```bash
@@ -34,6 +37,24 @@ A powerful CLI tool that processes PDF resumes using AWS Textract for OCR and AW
    make build
    ```
 
+### Option 2: Docker Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd resume-analyzer
+   ```
+
+2. **Build the Docker image:**
+   ```bash
+   docker build -t resume-analyzer .
+   ```
+
+   Or use Docker Compose:
+   ```bash
+   docker-compose build
+   ```
+
 ## Configuration
 
 Create a `.resume-analyzer.yaml` file in your home directory or project root:
@@ -47,10 +68,32 @@ anthropic_version: bedrock-2023-05-31
 
 ### Quick Start (Complete Workflow)
 
+#### Local Usage
 Run the entire pipeline with one command:
 
 ```bash
 make all-steps
+```
+
+#### Docker Usage
+```bash
+# Using Docker directly
+docker run --rm -v $(pwd)/input_pdfs:/app/input_pdfs:ro \
+  -v $(pwd)/output_txts:/app/output_txts \
+  -v $(pwd)/output_summaries:/app/output_summaries \
+  -v $(pwd)/output_consolidated:/app/output_consolidated \
+  resume-analyzer convert-pdfs -i input_pdfs -o output_txts && \
+docker run --rm -v $(pwd)/output_txts:/app/output_txts:ro \
+  -v $(pwd)/output_summaries:/app/output_summaries \
+  resume-analyzer summarize -i output_txts -o output_summaries && \
+docker run --rm -v $(pwd)/output_summaries:/app/output_summaries:ro \
+  -v $(pwd)/output_consolidated:/app/output_consolidated \
+  resume-analyzer consolidate -i output_summaries -o output_consolidated/consolidated_table_$(date +%Y%m%d_%H%M%S).csv
+
+# Using Docker Compose (easier)
+docker-compose run --rm resume-analyzer convert-pdfs -i input_pdfs -o output_txts && \
+docker-compose run --rm resume-analyzer summarize -i output_txts -o output_summaries && \
+docker-compose run --rm resume-analyzer consolidate -i output_summaries -o output_consolidated/consolidated_table_$(date +%Y%m%d_%H%M%S).csv
 ```
 
 This will:
@@ -61,24 +104,85 @@ This will:
 ### Individual Commands
 
 #### 1. Convert PDFs to Text
+
+**Local:**
 ```bash
 make convert-pdfs
 # or
 ./bin/resume-analyzer convert-pdfs -i input_pdfs -o output_txts
 ```
 
+**Docker:**
+```bash
+# Using Docker directly
+docker run --rm -v $(pwd)/input_pdfs:/app/input_pdfs:ro \
+  -v $(pwd)/output_txts:/app/output_txts \
+  resume-analyzer convert-pdfs -i input_pdfs -o output_txts
+
+# Using Docker Compose
+docker-compose run --rm resume-analyzer convert-pdfs -i input_pdfs -o output_txts
+```
+
 #### 2. Generate Summaries
+
+**Local:**
 ```bash
 make summarize
 # or
 ./bin/resume-analyzer summarize -i output_txts -o output_summaries
 ```
 
+**Docker:**
+```bash
+# Using Docker directly
+docker run --rm -v $(pwd)/output_txts:/app/output_txts:ro \
+  -v $(pwd)/output_summaries:/app/output_summaries \
+  resume-analyzer summarize -i output_txts -o output_summaries
+
+# Using Docker Compose
+docker-compose run --rm resume-analyzer summarize -i output_txts -o output_summaries
+```
+
 #### 3. Create Consolidated CSV
+
+**Local:**
 ```bash
 make consolidate
 # or
 ./bin/resume-analyzer consolidate -i output_summaries -o consolidated_table.csv
+```
+
+**Docker:**
+```bash
+# Using Docker directly
+docker run --rm -v $(pwd)/output_summaries:/app/output_summaries:ro \
+  -v $(pwd)/output_consolidated:/app/output_consolidated \
+  resume-analyzer consolidate -i output_summaries -o output_consolidated/consolidated_table.csv
+
+# Using Docker Compose
+docker-compose run --rm resume-analyzer consolidate -i output_summaries -o output_consolidated/consolidated_table.csv
+```
+
+#### 4. Query All Resumes
+
+**Local:**
+```bash
+# Query with output to console (default)
+./bin/resume-analyzer query -p "Who has the most experience with Python?" -i output_txts
+
+# Query with output to file (optional)
+./bin/resume-analyzer query -p "Compare the technical skills of all candidates" -i output_txts -o query_response.txt
+```
+
+**Docker:**
+```bash
+# Using Docker directly
+docker run --rm -v $(pwd)/output_txts:/app/output_txts:ro \
+  -v $(pwd):/app/query_output \
+  resume-analyzer query -p "Who has the most experience with Python?" -i output_txts -o query_output/query_response.txt
+
+# Using Docker Compose
+docker-compose run --rm resume-analyzer query -p "Who has the most experience with Python?" -i output_txts -o query_response.txt
 ```
 
 ### Directory Structure
@@ -89,6 +193,7 @@ resume-analyzer/
 ├── output_txts/          # Extracted text files
 ├── output_summaries/     # AI-generated summaries
 ├── consolidated_table_*.csv  # Final CSV file
+├── query_response.txt    # Query responses (optional)
 └── bin/                  # Built executable
 ```
 
@@ -122,6 +227,17 @@ The CSV format makes it easy to:
 - Filter and sort applicant data
 - Generate reports and visualizations
 
+### Query Responses
+The query command allows you to ask custom questions about all resumes at once. Examples:
+
+- **Skill Comparison**: "Who has the most experience with React and TypeScript?"
+- **Experience Analysis**: "Which candidates have more than 5 years of experience?"
+- **Role Matching**: "Find candidates suitable for a Senior Backend Developer role"
+- **Company Analysis**: "Which candidates have worked at FAANG companies?"
+- **Technical Assessment**: "Compare the cloud computing skills of all candidates"
+
+The query combines all resume texts into a single prompt, allowing Bedrock to provide comprehensive analysis across all candidates.
+
 ## Makefile Commands
 
 ```bash
@@ -131,6 +247,7 @@ make clean-outputs  # Clean all output directories
 make convert-pdfs   # Convert PDFs to text
 make summarize      # Generate summaries
 make consolidate    # Create consolidated CSV
+make query          # Show query command examples
 make all-steps      # Run complete workflow
 make help           # Show all available commands
 ```
@@ -160,6 +277,25 @@ make build-all  # Build for Linux, macOS, Windows
 - Ensure AWS credentials are properly configured
 - Verify access to Textract and Bedrock services
 - Check region settings (default: ap-southeast-1)
+
+### Docker Issues
+- **"Permission denied"**: Ensure the output directories have proper permissions
+  ```bash
+  mkdir -p output_txts output_summaries output_consolidated
+  chmod 755 output_txts output_summaries output_consolidated
+  ```
+- **"AWS credentials not found"**: Mount your AWS credentials or use environment variables
+  ```bash
+  # Mount AWS credentials
+  docker run --rm -v ~/.aws:/home/appuser/.aws:ro resume-analyzer --help
+  
+  # Or use environment variables
+  docker run --rm -e AWS_ACCESS_KEY_ID=your_key -e AWS_SECRET_ACCESS_KEY=your_secret resume-analyzer --help
+  ```
+- **"Volume mount issues"**: Ensure the directories exist before running Docker commands
+  ```bash
+  mkdir -p input_pdfs output_txts output_summaries output_consolidated
+  ```
 
 ### PDF Issues
 - Ensure PDFs are readable and not corrupted

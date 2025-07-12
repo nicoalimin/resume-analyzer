@@ -86,6 +86,13 @@ consolidate: build
 	@echo "Running consolidate example..."
 	./$(BUILD_DIR)/$(BINARY_NAME) consolidate -i output_summaries -o output_consolidated/consolidated_table_$(shell date +%Y%m%d_%H%M%S).csv
 
+# Run the query command (example)
+query: build
+	@echo "Running query example..."
+	@echo "Example: ./$(BUILD_DIR)/$(BINARY_NAME) query -p 'Who has the most experience with Python?' -i output_txts"
+	@echo "Example: ./$(BUILD_DIR)/$(BINARY_NAME) query -p 'Compare the technical skills of all candidates' -i output_txts"
+	@echo "Note: Responses are printed to console by default. Use -o filename to save to file."
+
 # Master workflow: convert PDFs, summarize, and consolidate
 all-steps: build
 	@echo "=== Starting complete resume analysis workflow ==="
@@ -118,6 +125,7 @@ help:
 	@echo "  convert-pdfs  - Run convert-pdfs example (input_pdfs -> output_txts)"
 	@echo "  summarize     - Run summarize example (output_txts -> output_summaries)"
 	@echo "  consolidate   - Run consolidate example (output_summaries -> consolidated_table_YYYYMMDD_HHMMSS.csv)"
+	@echo "  query         - Run query example"
 	@echo "  all-steps     - Run complete workflow: convert-pdfs -> summarize -> consolidate"
 	@echo "  fmt           - Format code"
 	@echo "  lint          - Lint code"

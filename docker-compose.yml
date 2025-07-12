@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  resume-analyzer:
+    build: .
+    container_name: resume-analyzer
+    volumes:
+      # Mount input PDFs directory
+      - ./input_pdfs:/app/input_pdfs:ro
+      # Mount output directories for persistence
+      - ./output_txts:/app/output_txts
+      - ./output_summaries:/app/output_summaries
+      - ./output_consolidated:/app/output_consolidated
+      # Mount AWS credentials (optional - can also use environment variables)
+      - ~/.aws:/home/appuser/.aws:ro
+    environment:
+      # AWS configuration (can be overridden)
+      - AWS_REGION=ap-southeast-1
+      # Add any other environment variables as needed
+    # Default command shows help
+    command: ["--help"]
+    # Run as non-root user (already set in Dockerfile)
+    # user: "1001:1001"
