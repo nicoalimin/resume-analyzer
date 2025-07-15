@@ -101,14 +101,70 @@ This will:
 2. Generate summaries (`output_txts` → `output_summaries`)
 3. Create consolidated CSV (`output_summaries` → `consolidated_table_YYYYMMDD_HHMMSS.csv`)
 
+### Organizing Multiple Resume Sets with Subfolders
+
+For better organization when processing multiple sets of resumes (e.g., different job positions, departments, or recruitment campaigns), use the subfolder feature:
+
+#### Recommended Directory Structure
+```
+resume-analyzer/
+├── input_pdfs/
+│   ├── engineering/          # Engineering positions
+│   │   ├── senior-dev.pdf
+│   │   ├── frontend-dev.pdf
+│   │   └── backend-dev.pdf
+│   ├── marketing/            # Marketing positions
+│   │   ├── content-writer.pdf
+│   │   └── social-media.pdf
+│   └── sales/                # Sales positions
+│       ├── account-exec.pdf
+│       └── sales-manager.pdf
+├── output_txts/
+│   ├── engineering/          # Auto-created when using SUBFOLDER
+│   ├── marketing/
+│   └── sales/
+├── output_summaries/
+│   ├── engineering/          # Auto-created when using SUBFOLDER
+│   ├── marketing/
+│   └── sales/
+└── output_consolidated/
+    ├── engineering/          # Auto-created when using SUBFOLDER
+    ├── marketing/
+    └── sales/
+```
+
+#### Processing Specific Resume Sets
+
+```bash
+# Process engineering resumes
+make SUBFOLDER=engineering all-steps
+
+# Process marketing resumes
+make SUBFOLDER=marketing all-steps
+
+# Process sales resumes
+make SUBFOLDER=sales all-steps
+```
+
+This approach provides:
+- **Organized workflow**: Keep different resume sets separate
+- **Parallel processing**: Process multiple sets simultaneously
+- **Easy comparison**: Compare results across different positions
+- **Clean outputs**: Each subfolder gets its own output directories
+
 ### Individual Commands
 
 #### 1. Convert PDFs to Text
 
 **Local:**
 ```bash
+# Process all PDFs in input_pdfs/
 make convert-pdfs
-# or
+
+# Process PDFs in a specific subfolder
+make SUBFOLDER=engineering convert-pdfs
+
+# Direct command
 ./bin/resume-analyzer convert-pdfs -i input_pdfs -o output_txts
 ```
 
@@ -127,8 +183,13 @@ docker-compose run --rm resume-analyzer convert-pdfs -i input_pdfs -o output_txt
 
 **Local:**
 ```bash
+# Generate summaries for all processed texts
 make summarize
-# or
+
+# Generate summaries for a specific subfolder
+make SUBFOLDER=engineering summarize
+
+# Direct command
 ./bin/resume-analyzer summarize -i output_txts -o output_summaries
 ```
 
@@ -147,8 +208,13 @@ docker-compose run --rm resume-analyzer summarize -i output_txts -o output_summa
 
 **Local:**
 ```bash
+# Create consolidated CSV for all summaries
 make consolidate
-# or
+
+# Create consolidated CSV for a specific subfolder
+make SUBFOLDER=engineering consolidate
+
+# Direct command
 ./bin/resume-analyzer consolidate -i output_summaries -o consolidated_table.csv
 ```
 
@@ -167,8 +233,11 @@ docker-compose run --rm resume-analyzer consolidate -i output_summaries -o outpu
 
 **Local:**
 ```bash
-# Query with output to console (default)
+# Query all processed resumes
 ./bin/resume-analyzer query -p "Who has the most experience with Python?" -i output_txts
+
+# Query resumes from a specific subfolder
+./bin/resume-analyzer query -p "Who has the most experience with Python?" -i output_txts/engineering
 
 # Query with output to file (optional)
 ./bin/resume-analyzer query -p "Compare the technical skills of all candidates" -i output_txts -o query_response.txt
@@ -187,14 +256,37 @@ docker-compose run --rm resume-analyzer query -p "Who has the most experience wi
 
 ### Directory Structure
 
+#### Basic Structure
 ```
 resume-analyzer/
 ├── input_pdfs/           # Place your PDF resumes here
 ├── output_txts/          # Extracted text files
 ├── output_summaries/     # AI-generated summaries
-├── consolidated_table_*.csv  # Final CSV file
+├── output_consolidated/  # Consolidated CSV files
 ├── query_response.txt    # Query responses (optional)
 └── bin/                  # Built executable
+```
+
+#### Advanced Structure with Subfolders
+```
+resume-analyzer/
+├── input_pdfs/
+│   ├── engineering/      # Engineering positions
+│   ├── marketing/        # Marketing positions
+│   └── sales/           # Sales positions
+├── output_txts/
+│   ├── engineering/      # Auto-created when using SUBFOLDER
+│   ├── marketing/
+│   └── sales/
+├── output_summaries/
+│   ├── engineering/      # Auto-created when using SUBFOLDER
+│   ├── marketing/
+│   └── sales/
+├── output_consolidated/
+│   ├── engineering/      # Auto-created when using SUBFOLDER
+│   ├── marketing/
+│   └── sales/
+└── bin/
 ```
 
 ## Technical Skills Detected
@@ -240,6 +332,7 @@ The query combines all resume texts into a single prompt, allowing Bedrock to pr
 
 ## Makefile Commands
 
+### Basic Commands
 ```bash
 make build          # Build the application
 make clean          # Clean build artifacts
@@ -250,6 +343,23 @@ make consolidate    # Create consolidated CSV
 make query          # Show query command examples
 make all-steps      # Run complete workflow
 make help           # Show all available commands
+```
+
+### Subfolder Commands
+```bash
+# Process specific subfolder
+make SUBFOLDER=engineering convert-pdfs
+make SUBFOLDER=engineering summarize
+make SUBFOLDER=engineering consolidate
+make SUBFOLDER=engineering all-steps
+
+# Clean specific subfolder outputs
+make SUBFOLDER=engineering clean-outputs
+
+# Examples for different departments
+make SUBFOLDER=marketing all-steps
+make SUBFOLDER=sales all-steps
+make SUBFOLDER=hr all-steps
 ```
 
 ## Development
